@@ -2,29 +2,43 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Grabber extends SubsystemBase { // defines Grabber subsystem and extends subsystembase
-  private static final int GRABBER_ID = 8; // Assinging GRABBER_ID a vaulue of 8
+public class Grabber extends SubsystemBase {
+  private static final int GRABBER_ID = 9;
 
-  private static final double GRABBER_IN_VOLTS = 8.0; // Assings GRABBER_IN_VOLTS a value of 8
+  private static final double GRABBER_IN_VOLTS = 8.0;
 
-  private final TalonFX motor = new TalonFX(GRABBER_ID); // Defines a new motor
+  private final TalonFX motor = new TalonFX(GRABBER_ID);
 
-  private final VoltageOut control = new VoltageOut(0); // Defines a new control
+  private final VoltageOut voltageControl = new VoltageOut(0);
 
-  private void setMotorPower(double volts) { // Sets the motor power takes volts as an argument
-    // motor.setControl(control.withOutput(volts)); //
-    control.Output = volts; // Changing value stored in control
-    motor.setControl(control); // Tell the motor what to run
+  private void setMotorPower(double volts) {
+    motor.setControl(voltageControl.withOutput(volts)); //
   }
 
-  public Command grabby() { // New method called grabby, returns a cmd
-    return startEnd( // method that create a cmd
-        () ->
-            setMotorPower(GRABBER_IN_VOLTS), // setting motopower to high voltage, when cmd starting
-        () -> setMotorPower(0) // when cmd ends we set it to 0
-        );
+  public Command grabCmd() {
+    return startEnd(() -> setMotorPower(GRABBER_IN_VOLTS), () -> setMotorPower(0));
+  }
+
+  private final DCMotorSim motorSim =
+      new DCMotorSim(
+          LinearSystemId.createDCMotorSystem(DCMotor.getKrakenX60Foc(1), 0.001, 1),
+          DCMotor.getKrakenX60Foc(1));
+
+  public void simulationPeriodic() {
+    var talonFXSim = motor.getSimState();
+    talonFXSim.setSupplyVoltage(RobotController.getBatteryVoltage());
+    var motorVoltage = talonFXSim.getMotorVoltage();
+    motorSim.setInputVoltage(motorVoltage);
+    motorSim.update(TimedRobot.kDefaultPeriod);
+    talonFXSim.setRawRotorPosition(motorSim.getAngularPosition());
+    talonFXSim.setRotorVelocity(motorSim.getAngularVelocity());
   }
 }
