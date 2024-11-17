@@ -126,7 +126,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
    * themselves. If they need the devices, they can access them through getters in the classes.
    *
    * @param drivetrainConstants Drivetrain-wide constants for the swerve drive
-   * @param odometryUpdateFrequency The frequency to run the odometry loop. If unspecified or set to
+   * @param OdometryUpdateFrequency The frequency to run the odometry loop. If unspecified or set to
    *     0 Hz, this is 250 Hz on CAN FD, and 100 Hz on CAN 2.0.
    * @param modules Constants for each specific module
    */
@@ -175,7 +175,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
   /**
    * Returns a command that applies the specified control request to this swerve drivetrain.
    *
-   * @param request Function returning the request to apply
+   * @param requestSupplier Function returning the request to apply
    * @return Command to run
    */
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
