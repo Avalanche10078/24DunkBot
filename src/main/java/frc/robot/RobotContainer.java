@@ -26,13 +26,14 @@ public class RobotContainer {
   public final Intake intake = new Intake();
   public final Grabber grabber = new Grabber();
 
-  private final CommandXboxController joystick = new CommandXboxController(0);
+  private final CommandXboxController driverJoystick = new CommandXboxController(0);
+  private final CommandXboxController operatorJoystick = new CommandXboxController(1);
   private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-  private double MaxSpeed =
+  private final double MaxSpeed =
       TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
   private final Telemetry logger = new Telemetry(MaxSpeed);
-  private double MaxAngularRate =
+  private final double MaxAngularRate =
       RotationsPerSecond.of(0.75)
           .in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
   /* Setting up bindings for necessary control of the swerve drive platform */
@@ -60,36 +61,48 @@ public class RobotContainer {
             () ->
                 drive
                     .withVelocityX(
-                        -joystick.getLeftY() * MaxSpeed) // Drive forward with negative Y (forward)
+                        -driverJoystick.getLeftY()
+                            * MaxSpeed) // Drive forward with negative Y (forward)
                     .withVelocityY(
-                        -joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+                        -driverJoystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
                     .withRotationalRate(
-                        -joystick.getRightX()
+                        -driverJoystick.getRightX()
                             * MaxAngularRate) // Drive counterclockwise with negative X (left)
             ));
 
-    joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-    joystick
+    driverJoystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
+    driverJoystick
         .b()
         .whileTrue(
             drivetrain.applyRequest(
                 () ->
                     point.withModuleDirection(
-                        new Rotation2d(-joystick.getLeftY(), -joystick.getLeftX()))));
+                        new Rotation2d(-driverJoystick.getLeftY(), -driverJoystick.getLeftX()))));
 
-    joystick.x().whileTrue(intake.moveIntakeIn());
-
-    joystick.y().whileTrue(grabber.grabCmd());
+    driverJoystick.x().whileTrue(intake.moveIntakeIn());
+    driverJoystick.y().whileTrue(grabber.grabCmd());
 
     // Run SysId routines when holding back/start and X/Y.
     // Note that each routine should be run exactly once in a single log.
-    joystick.back().and(joystick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-    joystick.back().and(joystick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-    joystick.start().and(joystick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-    joystick.start().and(joystick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+    driverJoystick
+        .back()
+        .and(driverJoystick.y())
+        .whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+    driverJoystick
+        .back()
+        .and(driverJoystick.x())
+        .whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+    driverJoystick
+        .start()
+        .and(driverJoystick.y())
+        .whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+    driverJoystick
+        .start()
+        .and(driverJoystick.x())
+        .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
     // reset the field-centric heading on left bumper press
-    joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+    driverJoystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
     drivetrain.registerTelemetry(logger::telemeterize);
   }

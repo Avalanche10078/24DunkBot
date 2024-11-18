@@ -9,6 +9,7 @@ import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.function.Supplier;
@@ -247,6 +249,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
       new SwerveRequest.ApplyRobotSpeeds();
 
   private void configureAutoBuilder() {
+    NamedCommands.registerCommand("score", Commands.none());
     try {
       var config = RobotConfig.fromGUISettings();
       AutoBuilder.configure(
@@ -266,8 +269,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
               // PID constants for rotation
               new PIDConstants(7, 0, 0)),
           config,
-          // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-          () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
+          // Hack to not flip path; fix later
+          () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue,
           this // Subsystem for requirements
           );
     } catch (Exception ex) {
